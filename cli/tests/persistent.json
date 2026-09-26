@@ -1,0 +1,41 @@
+{
+  "onion": {
+    "private_key": null,
+    "client_auth_priv_key": null,
+    "client_auth_pub_key": null
+  },
+  "persistent": {
+    "mode": "share",
+    "enabled": true,
+    "autostart_on_launch": false
+  },
+  "general": {
+    "title": null,
+    "public": false,
+    "autostart_timer": false,
+    "autostop_timer": true,
+    "service_id": null,
+    "qr": false
+  },
+  "share": {
+    "autostop_sharing": false,
+    "filenames": [
+      "/tmp/foo1",
+      "/tmp/foo2"
+    ],
+    "log_filenames": false
+  },
+  "receive": {
+    "data_dir": "/tmp",
+    "webhook_url": null,
+    "disable_text": false,
+    "disable_files": false
+  },
+  "website": {
+    "disable_csp": false,
+    "custom_csp": null,
+    "log_filenames": false,
+    "filenames": []
+  },
+  "chat": {}
+}

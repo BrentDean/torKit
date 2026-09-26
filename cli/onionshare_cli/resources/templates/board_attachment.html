@@ -1,0 +1,22 @@
+{% if attachment %}
+<section class="post-attachment" aria-label="Attached file">
+  {% if attachment['is_image'] %}
+  <a class="image-link" href="{{ url_for('board_attachment', attachment_id=attachment['id']) }}" target="_blank" rel="noopener noreferrer" aria-label="Open image {{ attachment['original_name'] }}">
+    <img class="inline-image"
+         src="{{ url_for('board_attachment', attachment_id=attachment['id']) }}"
+         alt="Attached image: {{ attachment['original_name'] }}"
+         loading="lazy" decoding="async" referrerpolicy="no-referrer">
+  </a>
+  {% endif %}
+  <div class="attachment-info">
+    <span class="attachment-symbol" aria-hidden="true">{% if attachment['is_image'] %}▧{% else %}⇩{% endif %}</span>
+    <span class="attachment-description">
+      <strong>{{ attachment['original_name'] }}</strong>
+      <small>{{ 'Image' if attachment['is_image'] else 'File' }} · {{ "%.1f"|format(attachment['size_bytes'] / 1024) }} KB</small>
+    </span>
+    <a class="button secondary attachment-download"
+       href="{{ url_for('board_download', attachment_id=attachment['id']) }}"
+       download="{{ attachment['original_name'] }}">Download</a>
+  </div>
+</section>
+{% endif %}

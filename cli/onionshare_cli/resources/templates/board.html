@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="dark">
+  <title>{{ title }} · torKit Board</title>
+  <link rel="stylesheet" href="{{ static_url_path }}/css/board.css">
+  <script src="{{ static_url_path }}/js/board.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#discussions">Skip to discussions</a>
+<div class="site-shell">
+  <header class="masthead">
+    <div class="brand-mark" aria-hidden="true">t<span>K</span></div>
+    <div class="brand-content">
+      <div class="eyebrow"><span class="online-dot"></span>PRIVATE · PERSISTENT · ONION</div>
+      <h1>{{ title }}</h1>
+      <p>Threads worth coming back to. Conversations that stay.</p>
+    </div>
+    <a class="header-action" href="#new-discussion">New discussion <span aria-hidden="true">↗</span></a>
+  </header>
+  <main>
+    <section class="board-overview" aria-label="Board overview">
+      <div><span class="stat-number">{{ thread_total }}</span><span class="stat-label">Discussions</span></div>
+      <div><span class="stat-number">{{ reply_total }}</span><span class="stat-label">Replies</span></div>
+      <div class="overview-note"><span class="eyebrow">RETENTION</span>
+        <strong>Posts survive restarts</strong><span>Until the owner clears or burns this board.</span></div>
+    </section>
+    <section id="discussions" class="feed" aria-labelledby="discussions-title">
+      <div class="section-heading"><div><span class="eyebrow">COMMUNITY BOARD</span>
+        <h2 id="discussions-title">Discussions</h2></div>
+        <span class="count-label">{{ match_total }} {% if query %}matches{% else %}total{% endif %}</span>
+      </div>
+      <form class="filter-bar" method="get" action="/" role="search">
+        <label class="search-field" for="board-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="board-search" name="q" type="search" value="{{ query }}"
+                 maxlength="120" placeholder="Search subjects, posts, or replies"
+                 aria-label="Search discussions">
+        </label>
+        <label class="sort-field" for="board-sort">
+          <span>Sort</span>
+          <select id="board-sort" name="sort">
+            <option value="activity" {% if sort == 'activity' %}selected{% endif %}>Recently active</option>
+            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest topics</option>
+            <option value="replies" {% if sort == 'replies' %}selected{% endif %}>Most replies</option>
+          </select>
+        </label>
+        <button class="button secondary" type="submit">Apply</button>
+        {% if query %}<a class="clear-filter" href="{{ url_for('board_home', sort=sort) }}">Clear search</a>{% endif %}
+      </form>
+      <div class="thread-list">
+        {% for post in threads %}
+        <article class="topic-card">
+          <div class="topic-topline">
+            <span class="avatar" aria-hidden="true">{{ post.author[:1]|upper }}</span>
+            <span class="author">{{ post.author }}</span>
+            <span class="divider" aria-hidden="true">·</span>
+            <time datetime="{{ post.created_at|replace(' ', 'T') }}Z">{{ post.created_at }} UTC</time>
+          </div>
+          <h3><a href="{{ url_for('board_thread', thread_id=post.id) }}">{{ post.title }}</a></h3>
+          <p class="preview">{{ post.body }}</p>
+          {% if attachments.get(post.id) %}<span class="attachment-indicator">▧ Includes an attachment</span>{% endif %}
+          <div class="topic-footer">
+            <a class="open-link" href="{{ url_for('board_thread', thread_id=post.id) }}">Open discussion <span aria-hidden="true">↗</span></a>
+            <span class="topic-replies">{{ post.replies }} {% if post.replies == 1 %}reply{% else %}replies{% endif %}</span>
+            {% if post.replies %}<span class="topic-activity">Last activity {{ post.latest_at }} UTC</span>{% endif %}
+          </div>
+        </article>
+        {% else %}
+        <div class="empty">
+          <span class="empty-icon" aria-hidden="true">◎</span>
+          <h3>{% if query %}No matches for your search{% else %}Start the conversation{% endif %}</h3>
+          <p>{% if query %}Try another phrase or clear the filter.{% else %}Nothing has been posted yet. Add the first discussion below.{% endif %}</p>
+          {% if query %}<a href="{{ url_for('board_home') }}">See all discussions</a>{% else %}<a href="#new-discussion">Start a discussion</a>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      <nav class="pager" aria-label="Discussion pages">
+        {% if page > 1 %}<a href="{{ url_for('board_home', q=query, sort=sort, page=page-1) }}">← Newer</a>{% endif %}
+        <span>Page {{ page }}</span>
+        {% if has_older %}<a href="{{ url_for('board_home', q=query, sort=sort, page=page+1) }}">Older →</a>{% endif %}
+      </nav>
+    </section>
+    <details id="new-discussion" class="composer">
+      <summary><span><span class="eyebrow">HAVE SOMETHING TO SHARE?</span>
+        <strong>Start a new discussion</strong><small>Text, inline images or files · 10 MB maximum</small></span>
+        <span class="compose-chevron" aria-hidden="true">+</span></summary>
+      <form method="post" action="{{ url_for('board_post') }}" enctype="multipart/form-data" class="post-form">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label for="author">Display name <span class="optional">optional</span></label>
+        <input id="author" name="author" maxlength="60" placeholder="Anonymous" autocomplete="off">
+        <label for="title">Subject</label>
+        <input id="title" name="title" maxlength="120" required placeholder="Give the discussion a clear title">
+        <label for="body">Message</label>
+        <textarea id="body" name="body" maxlength="5000" rows="6"
+                  placeholder="What would you like to talk about?"></textarea>
+        <label class="attachment-label" for="attachment">Add an image or file <span class="optional">optional</span></label>
+        <input id="attachment" type="file" name="attachment" accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.txt,.zip">
+        <small class="upload-hint">JPG, PNG, WebP and GIF display inline. PDF, TXT and ZIP download. One file, up to 10 MB. Photo metadata is not removed.</small>
+        <div class="selected-file" role="status" aria-live="polite"></div>
+        <button class="remove-attachment" type="button" hidden>Remove selected file</button>
+        <div class="form-footer"><span class="hint">Add a message, file, or both. All authorized visitors can read and download.</span>
+          <span class="character-count" data-count-for="body" aria-live="polite">0 / 5,000</span></div>
+        <button class="button primary publish" type="submit">Publish discussion <span aria-hidden="true">→</span></button>
+      </form>
+    </details>
+  </main>
+  <footer><span class="footer-mark">tor<span>K</span>it / Board</span>
+    <span>Private access is not end-to-end encryption. Posts are retained on this server.</span></footer>
+</div>
+</body>
+</html>

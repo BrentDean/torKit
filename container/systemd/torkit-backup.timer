@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily TorKit encrypted off-host backup
+
+[Timer]
+OnCalendar=*-*-* 03:17:00
+Persistent=true
+RandomizedDelaySec=15m
+Unit=torkit-backup.service
+
+[Install]
+WantedBy=timers.target

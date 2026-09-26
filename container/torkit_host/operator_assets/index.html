@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>torKit operator</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+<main class="shell">
+  <header class="masthead">
+    <div>
+      <div class="eyebrow"><span class="status-dot"></span> LOCAL OPERATOR CONSOLE</div>
+      <h1>tor<span class="brand-accent">Kit</span></h1>
+      <p>Manage your private onion services.</p>
+    </div>
+    <span class="local">127.0.0.1 only</span>
+  </header>
+  <section id="login-panel" class="card login-card">
+    <h2>Operator access</h2>
+    <p>Enter the temporary token displayed by <code>./torkit operator</code>.</p>
+    <form id="login-form">
+      <label for="token">Operator token</label>
+      <input type="password" id="token" autocomplete="off" required>
+      <button type="submit" class="primary">Unlock console</button>
+    </form>
+    <p id="login-error" class="error" role="alert"></p>
+  </section>
+  <section id="dashboard" hidden>
+    <div class="overview">
+      <div><div class="eyebrow">SERVICE CONTROL</div>
+        <h2>Operator dashboard</h2>
+        <p>Launch, pause, and permanently burn individual onion services.</p>
+      </div>
+      <button id="refresh" type="button" class="secondary">Refresh status</button>
+    </div>
+    <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+    <section class="service-group" aria-labelledby="active-title">
+      <div class="section-title">
+        <h2 id="active-title">Active services <span id="active-count" class="count">0</span></h2>
+        <span class="section-note">Running containers</span>
+      </div>
+      <div id="active-services" class="services"></div>
+      <p id="no-active" class="empty" hidden>No services are running. Launch one below.</p>
+    </section>
+    <section class="service-group" aria-labelledby="available-title">
+      <div class="section-title">
+        <h2 id="available-title">Available to launch <span id="available-count" class="count">0</span></h2>
+        <span class="section-note">New or stopped services</span>
+      </div>
+      <div id="available-services" class="services"></div>
+    </section>
+    <section class="card danger-zone">
+      <div class="eyebrow danger-label">DESTRUCTIVE ACTION</div>
+      <h2>Danger zone</h2>
+      <p>Remove all TorKit containers, the image, and private runtime identities.
+         Configuration and user content directories remain.</p>
+      <button type="button" id="nuke-button" class="danger">NUKE TORKIT</button>
+    </section>
+  </section>
+</main>
+<dialog id="confirm-dialog" aria-labelledby="dialog-title">
+  <form id="confirm-form">
+    <div class="eyebrow danger-label">CONFIRM DESTRUCTION</div>
+    <h2 id="dialog-title"></h2>
+    <p id="dialog-description"></p>
+    <label id="confirmation-label" for="confirmation"></label>
+    <input id="confirmation" type="text" autocomplete="off" spellcheck="false">
+    <div class="dialog-buttons">
+      <button type="button" id="cancel" class="secondary">Cancel</button>
+      <button id="execute" class="danger" type="submit" disabled></button>
+    </div>
+  </form>
+</dialog>
+<dialog id="access-dialog" aria-labelledby="access-title"><div class="eyebrow">PRIVATE ACCESS</div><h2 id="access-title">Service access</h2><p>Share only with intended recipients.</p><label for="access-address">Onion address</label><div class="access-field"><input id="access-address" type="text" readonly autocomplete="off" spellcheck="false"><button id="copy-address" type="button" class="secondary">Copy address</button></div><label for="access-credential">Client authorization key</label><div class="access-field"><input id="access-credential" type="password" readonly autocomplete="off" spellcheck="false"><button id="reveal-credential" type="button" aria-pressed="false">Reveal</button><button id="copy-credential" type="button">Copy authorization</button></div><p class="access-help">The key is hidden until revealed. Copied values remain on your clipboard until replaced.</p><p id="access-feedback" role="status" aria-live="polite"></p><button id="close-access" type="button" class="primary">Close</button></dialog>
+</body>
+</html>

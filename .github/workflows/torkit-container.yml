@@ -1,0 +1,43 @@
+name: TorKit container
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: container-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Python and shell syntax
+        run: |
+          python3 -m compileall -q container cli/onionshare_cli/mode_settings.py
+          node --check container/torkit_host/operator_assets/app.js
+          node --check cli/onionshare_cli/resources/static/js/board.js
+          bash -n container/smoke-test.sh
+          sh -n container/entrypoint.sh torkit
+      - name: Setup Terraform for recovery infrastructure checks
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+      - name: Validate S3 recovery infrastructure
+        run: |
+          terraform -chdir=infra/aws-recovery fmt -check -diff
+          terraform -chdir=infra/aws-recovery init -backend=false -input=false
+          terraform -chdir=infra/aws-recovery validate -no-color
+      - name: Install restic for recovery integration
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq restic
+      - name: Host launcher and service wrapper tests
+        run: PYTHONPATH=container python3 -m unittest discover -s container/tests -v
+      - name: Container build and smoke test
+        run: bash container/smoke-test.sh

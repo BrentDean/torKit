@@ -1,0 +1,166 @@
+name: torkit
+
+x-torkit-service: &torkit-service
+  image: ${TORKIT_IMAGE:-torkit:local}
+  build:
+    context: .
+    dockerfile: Dockerfile
+    args:
+      PYTHON_VERSION: ${TORKIT_PYTHON_VERSION:-3.11}
+      TORKIT_UID: ${TORKIT_CONTAINER_UID:-10001}
+      TORKIT_GID: ${TORKIT_CONTAINER_GID:-10001}
+      TORKIT_BUILD_ID: ${TORKIT_BUILD_ID:-unknown}
+
+  user: "${TORKIT_CONTAINER_UID:-10001}:${TORKIT_CONTAINER_GID:-10001}"
+  restart: unless-stopped
+  stop_signal: SIGINT
+  stop_grace_period: 45s
+  read_only: true
+
+  tmpfs:
+    - /tmp:rw,nosuid,nodev,noexec,size=64m,uid=${TORKIT_CONTAINER_UID:-10001},gid=${TORKIT_CONTAINER_GID:-10001},mode=1777
+
+  cap_drop:
+    - ALL
+
+  security_opt:
+    - no-new-privileges:true
+
+  pids_limit: 256
+
+  healthcheck:
+    test: [CMD, "python3", "/usr/local/lib/torkit/healthcheck.py"]
+    interval: 2s
+    timeout: 2s
+    retries: 90
+    start_period: 5s
+
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  chat:
+    <<: *torkit-service
+    profiles: [chat]
+    networks: [chat_net]
+    environment:
+      TORKIT_MODE: chat
+      TORKIT_TITLE: ${TORKIT_CHAT_TITLE:-Onion secured}
+    command:
+      - --chat
+      - --title
+      - ${TORKIT_CHAT_TITLE:-Onion secured}
+      - --persistent
+      - /var/lib/torkit/session.json
+    volumes:
+      - type: bind
+        source: ${TORKIT_CHAT_STATE:?TORKIT_CHAT_STATE is required}
+        target: /var/lib/torkit
+
+  board:
+    <<: *torkit-service
+    profiles: [board]
+    networks: [board_net]
+    environment:
+      TORKIT_MODE: board
+      TORKIT_TITLE: ${TORKIT_BOARD_TITLE:-Private board}
+      TORKIT_BOARD_DB: /var/lib/torkit/board.sqlite3
+    command:
+      - --board
+      - --title
+      - ${TORKIT_BOARD_TITLE:-Private board}
+      - --persistent
+      - /var/lib/torkit/session.json
+    volumes:
+      - type: bind
+        source: ${TORKIT_BOARD_STATE:?TORKIT_BOARD_STATE is required}
+        target: /var/lib/torkit
+
+  fileshare:
+    <<: *torkit-service
+    profiles: [fileshare]
+    networks: [share_net]
+    environment:
+      TORKIT_MODE: share
+      TORKIT_TITLE: Onion share
+      TORKIT_SOURCE_PATH: /srv/torkit/share
+    command:
+      - --title
+      - Onion share
+      - --no-autostop-sharing
+      - --persistent
+      - /var/lib/torkit/session.json
+      - /srv/torkit/share
+    volumes:
+      - type: bind
+        source: ${TORKIT_FILESHARE_STATE:?TORKIT_FILESHARE_STATE is required}
+        target: /var/lib/torkit
+      - type: bind
+        source: ${TORKIT_FILESHARE_PATH:-/onion_share}
+        target: /srv/torkit/share
+        read_only: true
+
+  receive:
+    <<: *torkit-service
+    profiles: [receive]
+    networks: [receive_net]
+    environment:
+      TORKIT_MODE: receive
+      TORKIT_TITLE: Onion receive
+      TORKIT_SOURCE_PATH: /srv/torkit/receive
+    command:
+      - --receive
+      - --title
+      - Onion receive
+      - --data-dir
+      - /srv/torkit/receive
+      - --persistent
+      - /var/lib/torkit/session.json
+    volumes:
+      - type: bind
+        source: ${TORKIT_RECEIVE_STATE:?TORKIT_RECEIVE_STATE is required}
+        target: /var/lib/torkit
+      - type: bind
+        source: ${TORKIT_RECEIVE_PATH:-/onion_receive}
+        target: /srv/torkit/receive
+
+  website:
+    <<: *torkit-service
+    profiles: [website]
+    networks: [website_net]
+    environment:
+      TORKIT_MODE: website
+      TORKIT_TITLE: Onion website
+      TORKIT_SOURCE_PATH: /srv/torkit/website
+    command:
+      - --website
+      - --title
+      - Onion website
+      - --persistent
+      - /var/lib/torkit/session.json
+      - /srv/torkit/website
+    volumes:
+      - type: bind
+        source: ${TORKIT_WEBSITE_STATE:?TORKIT_WEBSITE_STATE is required}
+        target: /var/lib/torkit
+      - type: bind
+        source: ${TORKIT_WEBSITE_PATH:-/onion_website}
+        target: /srv/torkit/website
+        read_only: true
+
+# Each service has its own bridge network; none is 'internal', because Tor
+# requires outbound connectivity to directory authorities and relays.
+networks:
+  chat_net:
+    driver: bridge
+  board_net:
+    driver: bridge
+  share_net:
+    driver: bridge
+  receive_net:
+    driver: bridge
+  website_net:
+    driver: bridge

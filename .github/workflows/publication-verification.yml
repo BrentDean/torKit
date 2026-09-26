@@ -1,0 +1,130 @@
+name: Publication verification
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: publication-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout complete reachable history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Fetch repository branches and tags for history inspection
+        run: |
+          git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
+          git fetch --tags origin
+          printf 'Current branch objects: '
+          git rev-list --all --count
+
+      - name: Check current source and Git-history privacy patterns
+        run: python3 scripts/publication-audit.py
+
+      # Private engineering history is retained; a separate clean-history public export
+      # must receive a blocking full-history scan before public visibility.
+      - name: Review private legacy Git history for secrets
+        if: always()
+        run: |
+          status=0
+          docker run --rm --volume "$PWD:/repo:ro" \
+            --volume "$RUNNER_TEMP:/report" \
+            ghcr.io/gitleaks/gitleaks:latest \
+            git --redact --log-opts="--all" --report-format json --report-path /report/history.json /repo || status=$?
+          python3 - "$RUNNER_TEMP/history.json" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          path = pathlib.Path(sys.argv[1])
+          if path.is_file():
+              entries = json.loads(path.read_text(encoding="utf-8"))
+              print(f"Found {len(entries)} Gitleaks candidate(s); values withheld:")
+              for entry in entries[:60]:
+                  location = entry.get("File", "[unknown file]")
+                  rule = entry.get("RuleID", "[unknown rule]")
+                  commit = entry.get("Commit", "")[:12]
+                  print(f"  {rule} | {location} | {commit}")
+          else:
+              print("No JSON report written by Gitleaks.")
+          PY
+          if [[ "$status" -eq 1 ]]; then
+            echo "::warning::Private history has findings; review before exporting any history publicly."
+          elif [[ "$status" -ne 0 ]]; then
+            exit "$status"
+          fi
+
+      - name: Scan current files and nested archives for secrets
+        if: always()
+        run: |
+          status=0
+          docker run --rm --volume "$PWD:/repo:ro" \
+            --volume "$RUNNER_TEMP:/report" \
+            ghcr.io/gitleaks/gitleaks:latest \
+            dir --redact --max-archive-depth=2 --report-format json --report-path /report/current.json /repo || status=$?
+          python3 - "$RUNNER_TEMP/current.json" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          path = pathlib.Path(sys.argv[1])
+          if path.is_file():
+              entries = json.loads(path.read_text(encoding="utf-8"))
+              print(f"Found {len(entries)} Gitleaks candidate(s); values withheld:")
+              for entry in entries[:60]:
+                  location = entry.get("File", "[unknown file]")
+                  rule = entry.get("RuleID", "[unknown rule]")
+                  commit = entry.get("Commit", "")[:12]
+                  print(f"  {rule} | {location} | {commit}")
+          else:
+              print("No JSON report written by Gitleaks.")
+          PY
+          exit "$status"
+
+      - name: Check committed images for location and author metadata
+        if: always()
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libimage-exiftool-perl
+          dirs=()
+          for path in assets docs cli desktop container; do
+            if [[ -d "$path" ]]; then
+              dirs+=("$path")
+            fi
+          done
+          if (("${#dirs[@]}" == 0)); then
+            echo "No image directories present."
+            exit 0
+          fi
+          exiftool -q -r -ext png -ext jpg -ext jpeg -ext webp \
+            -json -GPSLatitude -GPSLongitude -GPSPosition \
+            -Artist -Author -Creator -OwnerName \
+            "${dirs[@]}" > "$RUNNER_TEMP/image-metadata.json"
+          python3 - "$RUNNER_TEMP/image-metadata.json" <<'PY'
+          import json
+          import sys
+
+          data = json.load(open(sys.argv[1], encoding="utf-8"))
+          tags = {"GPSLatitude", "GPSLongitude", "GPSPosition",
+                  "Artist", "Author", "Creator", "OwnerName"}
+          flagged = [(row.get("SourceFile", "<unknown>"), sorted(tags & row.keys()))
+                     for row in data if tags & row.keys()]
+          if flagged:
+              print("Images with GPS or author metadata (paths and tag names only):")
+              for path, found_tags in flagged:
+                  print(f"{path}: {', '.join(found_tags)}")
+              raise SystemExit(1)
+          print(f"Reviewed {len(data)} image(s): no GPS/author metadata tags.")
+          PY

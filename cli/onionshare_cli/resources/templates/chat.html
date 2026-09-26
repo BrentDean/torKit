@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>{% if title %}{{ title }}{% else %}torKit Chat{% endif %}</title>
+
+  <link
+    href="{{ static_url_path }}/img/favicon.ico"
+    rel="icon"
+    type="image/x-icon"
+  >
+
+  <link
+    rel="stylesheet"
+    rel="subresource"
+    type="text/css"
+    href="{{ static_url_path }}/css/style.css"
+    media="all"
+  >
+
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="{{ static_url_path }}/css/chat.css"
+    media="all"
+  >
+</head>
+
+<body class="chat-page">
+
+  <header class="chat-header">
+    <div class="chat-header-inner">
+      <img
+        class="logo"
+        src="{{ static_url_path }}/img/logo.png"
+        alt="torKit"
+        title="torKit"
+      >
+
+      <div class="chat-header-text">
+        <p class="chat-header-label">A secure torKit service</p>
+        <h1>{% if title %}{{ title }}{% else %}torKit Chat{% endif %}</h1>
+      </div>
+    </div>
+  </header>
+
+  <noscript>
+    <div class="chat-notice chat-notice-error">
+      Chat <b>requires JavaScript</b>, so you must set your Tor Browser security
+      level to <b>Safer</b> or <b>Standard</b> to join.
+    </div>
+  </noscript>
+
+  <main class="chat-container no-js">
+
+    <aside class="chat-users" aria-label="Chat participants">
+
+      <section class="editable-username">
+        <h2>Your identity</h2>
+
+        <input
+          id="username"
+          type="text"
+          value="{{ username }}"
+          maxlength="127"
+          autocomplete="off"
+          spellcheck="false"
+        >
+
+        <p
+          id="username-error"
+          role="alert"
+          aria-live="polite"
+        ></p>
+      </section>
+
+      <section class="chat-participants">
+        <div class="chat-section-heading">
+          <h2>Active</h2>
+        </div>
+
+        <ul id="user-list" aria-live="polite"></ul>
+      </section>
+
+    </aside>
+
+    <section class="chat-wrapper" aria-label="Chat conversation">
+
+      <div
+        id="chat"
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+        aria-label="Messages"
+      ></div>
+
+      <div class="chat-form">
+        <label class="visually-hidden" for="new-message">
+          Message
+        </label>
+
+        <input
+          type="text"
+          id="new-message"
+          name="new-message"
+          placeholder="Echo through the onion"
+          autocomplete="off"
+          spellcheck="true"
+        >
+
+        <p class="chat-input-hint">ENTER to send it</p>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="{{ static_url_path }}/js/jquery-3.7.1.slim.min.js"></script>
+  <script src="{{ static_url_path }}/js/socket.io.min.js"></script>
+  <script async src="{{ static_url_path }}/js/chat.js"></script>
+
+</body>
+
+</html>

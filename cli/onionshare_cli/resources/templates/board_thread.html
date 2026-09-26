@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer"><meta name="color-scheme" content="dark">
+<title>{{ thread.title }} · {{ title }}</title>
+<link rel="stylesheet" href="{{ static_url_path }}/css/board.css">
+<script src="{{ static_url_path }}/js/board.js" defer></script>
+</head><body>
+<div class="site-shell">
+<header class="masthead compact">
+  <div class="brand-mark" aria-hidden="true">t<span>K</span></div>
+  <div class="brand-content"><div class="eyebrow"><span class="online-dot"></span>PRIVATE · PERSISTENT · ONION</div>
+    <h1>{{ title }}</h1><a class="back" href="{{ url_for('board_home') }}">← All discussions</a></div>
+</header>
+<main class="thread-page">
+  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="{{ url_for('board_home') }}">Board</a><span aria-hidden="true">/</span><span>Discussion #{{ thread.id }}</span></nav>
+  <article class="main-post">
+    <div class="topic-topline"><span class="avatar" aria-hidden="true">{{ thread.author[:1]|upper }}</span>
+      <span class="author">{{ thread.author }}</span><span class="divider" aria-hidden="true">·</span>
+      <time datetime="{{ thread.created_at|replace(' ', 'T') }}Z">{{ thread.created_at }} UTC</time></div>
+    <h2>{{ thread.title }}</h2>{% if thread.body %}<p class="post-body">{{ thread.body }}</p>{% endif %}
+    {% set attachment = attachments.get(thread.id) %}{% include "board_attachment.html" %}
+    <div class="post-actions">
+      <span class="topic-replies">{{ reply_total }} {% if reply_total == 1 %}reply{% else %}replies{% endif %}</span>
+      <button type="button" class="text-button" data-copy-link>Copy discussion link</button>
+      <span class="copy-feedback" role="status" aria-live="polite"></span>
+    </div>
+  </article>
+  <section class="reply-section" aria-labelledby="reply-title">
+    <div class="section-heading"><div><span class="eyebrow">THE CONVERSATION</span>
+      <h2 id="reply-title">Replies <span class="count-label">{{ reply_total }}</span></h2></div>
+      <a class="header-action" href="#reply-form">Write a reply ↓</a></div>
+    <div class="reply-list">
+    {% for reply in replies %}
+    <article class="reply-card" id="reply-{{ reply.id }}">
+      <div class="topic-topline"><span class="avatar" aria-hidden="true">{{ reply.author[:1]|upper }}</span>
+        <span class="author">{{ reply.author }}</span><span class="divider" aria-hidden="true">·</span>
+        <time datetime="{{ reply.created_at|replace(' ', 'T') }}Z">{{ reply.created_at }} UTC</time></div>
+      {% if reply.body %}<p class="post-body">{{ reply.body }}</p>{% endif %}
+      {% set attachment = attachments.get(reply.id) %}{% include "board_attachment.html" %}
+    </article>
+    {% else %}<div class="empty"><span class="empty-icon" aria-hidden="true">◌</span>
+      <h3>No replies yet</h3><p>Be the first to contribute to this discussion.</p></div>{% endfor %}
+    </div>
+    <nav class="pager" aria-label="Reply pages">
+      {% if page > 1 %}<a href="{{ url_for('board_thread', thread_id=thread.id, page=page-1) }}">← Newer replies</a>{% endif %}
+      <span>Page {{ page }} · Newest first</span>
+      {% if has_older %}<a href="{{ url_for('board_thread', thread_id=thread.id, page=page+1) }}">Older replies →</a>{% endif %}
+    </nav>
+  </section>
+  <section id="reply-form" class="composer reply-form" aria-labelledby="respond-title">
+    <span class="eyebrow">JOIN THE DISCUSSION</span><h2 id="respond-title">Write a reply</h2>
+    <form method="post" action="{{ url_for('board_reply', thread_id=thread.id) }}" enctype="multipart/form-data" class="post-form">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="author">Display name <span class="optional">optional</span></label>
+      <input id="author" name="author" maxlength="60" placeholder="Anonymous" autocomplete="off">
+      <label for="body">Reply</label>
+      <textarea id="body" name="body" maxlength="5000" rows="6"
+                placeholder="Add to the conversation"></textarea>
+      <label class="attachment-label" for="attachment">Add an image or file <span class="optional">optional</span></label>
+      <input id="attachment" type="file" name="attachment" accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.txt,.zip">
+      <small class="upload-hint">JPG, PNG, WebP and GIF display inline. PDF, TXT and ZIP download. One file, up to 10 MB. Photo metadata is not removed.</small>
+      <div class="selected-file" role="status" aria-live="polite"></div>
+        <button class="remove-attachment" type="button" hidden>Remove selected file</button>
+      <div class="form-footer"><span class="hint">Add a message, file, or both. Attachments persist with the reply.</span>
+        <span class="character-count" data-count-for="body" aria-live="polite">0 / 5,000</span></div>
+      <button class="button primary publish" type="submit">Post reply <span aria-hidden="true">→</span></button>
+    </form>
+  </section>
+</main>
+<footer><span class="footer-mark">tor<span>K</span>it / Board</span>
+<span>Posts remain until the owner clears or burns this board.</span></footer>
+</div></body></html>

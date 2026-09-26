@@ -1,0 +1,42 @@
+name: Run Tests
+run-name: Run tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: cli-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install tor obfs4proxy
+          pip install --upgrade pip poetry
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-cli-poetry-${{ hashFiles('cli/poetry.lock') }}
+      - run: cd cli && poetry install
+      - run: |
+          cd cli
+          poetry run pytest -v ./tests
+          poetry run onionshare-cli --local-only ./tests --auto-stop-timer 2 --qr --verbose > /dev/null 2>&1
+          poetry run onionshare-cli --local-only ./tests --auto-start-timer 2 --auto-stop-timer 2 --qr --verbose > /dev/null 2>&1
+          poetry run onionshare-cli --local-only --receive --auto-stop-timer 2 --qr --verbose > /dev/null 2>&1
+          poetry run onionshare-cli --local-only --website ../docs --auto-stop-timer 2 --qr --verbose > /dev/null 2>&1
+          poetry run onionshare-cli --local-only --chat --auto-stop-timer 5 --qr --verbose > /dev/null 2>&1
+          touch /tmp/foo{1,2} && poetry run onionshare-cli --local-only --persistent tests/persistent.json --auto-stop-timer 5 --verbose > /dev/null 2>&1
+

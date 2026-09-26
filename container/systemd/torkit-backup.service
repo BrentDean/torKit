@@ -1,0 +1,15 @@
+[Unit]
+Description=TorKit encrypted off-host recovery backup
+Documentation=man:restic(1)
+After=docker.service
+Requires=docker.service
+ConditionPathExists=%h/.config/torkit/backup.env
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/torkit
+EnvironmentFile=%h/.config/torkit/backup.env
+ExecStart=/opt/torkit/torkit backup --no-content --prune
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true

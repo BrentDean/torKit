@@ -1,0 +1,73 @@
+:root{
+  font:16px/1.5 system-ui,sans-serif;color-scheme:dark;
+  background:#101219;color:#edf0fa
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -10%,#28204065,transparent 48%),#101219}
+.shell{max-width:1050px;margin:0 auto;padding:42px 24px 70px}
+.masthead,.overview,.section-title{display:flex;justify-content:space-between;align-items:center;gap:22px}
+.masthead{margin-bottom:54px;align-items:flex-start}
+h1{font-size:3rem;line-height:1.1;letter-spacing:-.055em;margin:12px 0 8px}
+.brand-accent{color:#b0a1f8}
+h2{font-size:1.5rem;letter-spacing:-.025em;margin:0 0 8px}
+h3{font-size:1.25rem;margin:0;letter-spacing:-.01em}
+p{color:#b6bed0;margin:4px 0 16px}
+.eyebrow{font-size:.71rem;font-weight:800;letter-spacing:.15em;color:#b6a9fd}
+.status-dot{display:inline-block;width:7px;height:7px;background:#66df9a;border-radius:50%;margin-right:8px}
+.local{white-space:nowrap;border:1px solid #44495b;border-radius:999px;padding:7px 13px;color:#bfc5d4;font-size:.8rem}
+.card,.service,.empty{background:#1b1e29;border:1px solid #34384a;border-radius:14px}
+.login-card{padding:26px}
+.login-card form{max-width:620px}
+.overview{margin-bottom:12px;align-items:flex-end}
+.overview h2{font-size:2rem;margin-top:5px}
+.section-title{margin:28px 0 13px}
+.section-title h2{margin:0;font-size:1.3rem}
+.section-note{color:#929aae;font-size:.83rem}
+.count{font-size:.76rem;vertical-align:middle;color:#d5d9e8;background:#32354a;border-radius:999px;padding:3px 9px;margin-left:5px}
+.service{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:21px 23px;margin:10px 0;box-shadow:0 8px 22px #0002}
+.service-info{min-width:0}
+.service-heading{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.service-detail{margin:9px 0 0;font-size:.88rem;color:#a8afc2}
+.badge{font-size:.68rem;font-weight:800;letter-spacing:.04em;padding:4px 9px;border-radius:999px;border:1px solid #555a6c}
+.badge.online{color:#8de7af;background:#1b473a80;border-color:#315f48}
+.badge.muted{color:#adb3c4;background:#282c39;border-color:#3b4251}
+.badge.warning{color:#ffd08f;background:#5d442450;border-color:#655035}
+.service-actions{display:flex;justify-content:flex-end;gap:8px;align-items:center;flex-wrap:wrap}
+button{cursor:pointer;border:1px solid transparent;border-radius:9px;padding:10px 15px;min-height:42px;font:700 .85rem/1.2 system-ui,sans-serif;color:white;background:#3c4359;white-space:nowrap;transition:background .15s}
+button:hover:enabled{filter:brightness(1.12)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:#6f58d8}
+.secondary{background:#353b50}
+.danger{background:#c43244}
+.ghost-danger{border-color:#74434b;background:transparent;color:#f4aab0}
+.empty{padding:24px;color:#9ea6b9}
+.feedback{min-height:0;margin:0;color:#c5b8ff;font-size:.9rem}
+.feedback:empty{display:none}
+.danger-zone{padding:25px;margin-top:42px;border-color:#783843}
+.danger-zone h2{margin-top:8px}
+.danger-label{color:#f199a5}
+label{display:block;margin:14px 0 7px;font-weight:650}
+input{display:block;width:100%;padding:12px;background:#11141d;color:white;border:1px solid #51576b;border-radius:8px;font:inherit}
+input:focus-visible{outline:2px solid #9b87ff;outline-offset:1px}
+form button{margin-top:14px}
+.error{color:#ff9eaa}
+dialog{background:#1d202b;color:#edf0fa;border:1px solid #a54b57;border-radius:14px;padding:26px;width:min(460px,calc(100vw - 32px));box-shadow:0 32px 72px #0009}
+dialog::backdrop{background:#000b}
+.dialog-buttons{display:flex;justify-content:flex-end;gap:9px;margin-top:14px}
+#access-dialog{width:min(680px,calc(100vw - 32px))}
+#access-dialog h2{margin:9px 0 12px}
+#access-dialog .access-field{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#access-dialog .access-field input{flex:1 1 290px;min-width:0;font: .9rem ui-monospace,monospace}
+#access-dialog .access-field button{min-width:75px}
+#access-feedback{margin:14px 0;color:#b6a9fd}
+[hidden]{display:none!important}
+code{font-family:ui-monospace,monospace}
+@media(max-width:700px){
+ .shell{padding:26px 15px 50px}
+ .masthead,.overview{align-items:flex-start;flex-direction:column}
+ .masthead{margin-bottom:36px}
+ .section-note{display:none}
+ .service{align-items:flex-start;flex-direction:column;padding:18px}
+ .service-actions{justify-content:flex-start;width:100%}
+ h1{font-size:2.5rem}
+}
